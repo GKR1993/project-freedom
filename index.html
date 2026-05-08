@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oferte e Compre — Faça sua oferta e garanta o melhor preço</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { brand: { 500: '#f97316', 600: '#ea580c', 700: '#c2410c' } } } }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-white">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+          <span class="text-white font-black text-sm">O</span>
+        </div>
+        <span class="font-bold text-gray-900">Oferte<span class="text-orange-500">&</span>Compre</span>
+      </a>
+      <div class="flex items-center gap-3">
+        <a href="/loja/" class="text-sm text-gray-600 hover:text-orange-600 font-medium transition-colors">Ver Produtos</a>
+        <a href="/merchant/login.html" class="text-sm bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-semibold transition-colors">Sou Lojista</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-24 pb-20 bg-gradient-to-br from-orange-50 via-white to-blue-50">
+    <div class="max-w-6xl mx-auto px-4 text-center">
+      <div class="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-sm font-medium px-4 py-2 rounded-full mb-6">
+        <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+        Conectando lojistas e compradores em tempo real
+      </div>
+      <h1 class="text-5xl md:text-7xl font-black text-gray-900 leading-tight mb-6">
+        Faça sua oferta.<br>
+        <span class="text-orange-500">Garanta o melhor preço.</span>
+      </h1>
+      <p class="text-xl text-gray-500 max-w-2xl mx-auto mb-10">
+        Lojistas com estoque parado anunciam produtos. Você faz uma oferta justa e, se for boa o suficiente, a compra acontece na hora.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/loja/" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5">
+          Ver Produtos →
+        </a>
+        <a href="/merchant/register.html" class="bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 px-8 py-4 rounded-2xl text-lg font-bold transition-all hover:-translate-y-0.5">
+          Sou Lojista
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works — Customer -->
+  <section class="py-20 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl font-black text-gray-900">Para quem quer comprar</h2>
+        <p class="text-gray-500 mt-2">Simples assim</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="text-center p-6">
+          <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🔍</div>
+          <h3 class="font-bold text-gray-900 text-lg mb-2">1. Encontre o produto</h3>
+          <p class="text-gray-500 text-sm">Navegue por produtos de lojistas com estoque disponível. Veja o preço de mercado sugerido.</p>
+        </div>
+        <div class="text-center p-6">
+          <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">💬</div>
+          <h3 class="font-bold text-gray-900 text-lg mb-2">2. Faça sua oferta</h3>
+          <p class="text-gray-500 text-sm">Defina quanto quer pagar. Você vê o preço sugerido, mas o valor mínimo do lojista é secreto.</p>
+        </div>
+        <div class="text-center p-6">
+          <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">✅</div>
+          <h3 class="font-bold text-gray-900 text-lg mb-2">3. Compra confirmada</h3>
+          <p class="text-gray-500 text-sm">Se aceita, o lojista entra em contato na hora pelo WhatsApp para finalizar a venda.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How the algorithm works -->
+  <section class="py-20 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-black text-gray-900">Como o sistema decide aceitar?</h2>
+        <p class="text-gray-500 mt-2">Transparente e inteligente</p>
+      </div>
+      <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl">
+            <span class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">1</span>
+            <div>
+              <p class="font-semibold text-gray-900">Lojista anuncia 10 TVs com preço mínimo de R$ 2.000 <span class="text-gray-400 text-sm">(secreto)</span></p>
+              <p class="text-sm text-gray-500 mt-1">Você vê apenas: "Preço sugerido: R$ 2.500"</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-green-50 rounded-2xl">
+            <span class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">2</span>
+            <div>
+              <p class="font-semibold text-gray-900">Cliente A oferece R$ 2.200 → <span class="text-green-600">ACEITA</span></p>
+              <p class="text-sm text-gray-500 mt-1">Média = R$ 2.200 > R$ 2.000 ✓</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-green-50 rounded-2xl">
+            <span class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">3</span>
+            <div>
+              <p class="font-semibold text-gray-900">Cliente B oferece R$ 1.900 → <span class="text-green-600">ACEITA</span></p>
+              <p class="text-sm text-gray-500 mt-1">Média = (2.200 + 1.900) / 2 = R$ 2.050 > R$ 2.000 ✓</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 p-4 bg-red-50 rounded-2xl">
+            <span class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">4</span>
+            <div>
+              <p class="font-semibold text-gray-900">Cliente C oferece R$ 1.900 → <span class="text-red-600">RECUSADA</span></p>
+              <p class="text-sm text-gray-500 mt-1">Média = (2.200 + 1.900 + 1.900) / 3 = R$ 2.000 — não ultrapassa o mínimo ✗</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For merchants -->
+  <section class="py-20 bg-orange-500">
+    <div class="max-w-6xl mx-auto px-4 text-center">
+      <h2 class="text-3xl font-black text-white mb-4">Para lojistas</h2>
+      <p class="text-orange-100 text-lg max-w-2xl mx-auto mb-10">
+        Estoque encalhado? Quer queimar estoque antes dos novos modelos chegarem? Publique seus produtos e receba ofertas acima do seu valor mínimo.
+      </p>
+      <div class="grid md:grid-cols-3 gap-6 mb-12">
+        <div class="bg-white/10 rounded-2xl p-6 text-white text-left">
+          <div class="text-3xl mb-3">🔒</div>
+          <h3 class="font-bold mb-2">Preço mínimo secreto</h3>
+          <p class="text-orange-100 text-sm">Clientes nunca veem quanto você quer. Só recebe ofertas que satisfaçam sua margem.</p>
+        </div>
+        <div class="bg-white/10 rounded-2xl p-6 text-white text-left">
+          <div class="text-3xl mb-3">⚡</div>
+          <h3 class="font-bold mb-2">Venda instantânea</h3>
+          <p class="text-orange-100 text-sm">O sistema aceita automaticamente. Você recebe o contato do comprador na hora.</p>
+        </div>
+        <div class="bg-white/10 rounded-2xl p-6 text-white text-left">
+          <div class="text-3xl mb-3">📊</div>
+          <h3 class="font-bold mb-2">Dashboard completo</h3>
+          <p class="text-orange-100 text-sm">Veja suas vendas, médias de ofertas e gerencie seu estoque em tempo real.</p>
+        </div>
+      </div>
+      <a href="/merchant/register.html" class="inline-block bg-white text-orange-600 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-orange-50 transition-colors shadow-lg">
+        Criar conta de lojista grátis
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-gray-400 py-10">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center">
+          <span class="text-white font-black text-xs">O</span>
+        </div>
+        <span class="font-bold text-white">Oferte<span class="text-orange-500">&</span>Compre</span>
+      </div>
+      <p class="text-sm">© 2025 Oferte e Compre. Todos os direitos reservados.</p>
+      <div class="flex gap-4 text-sm">
+        <a href="/loja/" class="hover:text-white transition-colors">Comprar</a>
+        <a href="/merchant/login.html" class="hover:text-white transition-colors">Área do Lojista</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Produto — Oferte e Compre</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <div id="toast" class="hidden fixed bottom-6 right-6 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-lg z-50"></div>
+
+  <!-- Top bar -->
+  <header class="bg-white border-b border-gray-100 px-8 py-4 flex items-center gap-4">
+    <a href="/merchant/dashboard.html" class="text-gray-400 hover:text-gray-700 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </a>
+    <h1 class="font-bold text-gray-900">Novo Produto</h1>
+  </header>
+
+  <div class="max-w-2xl mx-auto px-4 py-10">
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+      <form id="product-form" class="space-y-6">
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nome do produto *</label>
+          <input id="name" type="text" required placeholder="Ex: Smart TV Samsung 55' 4K"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Descrição</label>
+          <textarea id="description" rows="3" placeholder="Descreva o produto, inclua informações relevantes..."
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Categoria *</label>
+            <select id="category" required
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white">
+              <option value="">Selecionar...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Condição *</label>
+            <select id="condition" required
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white">
+              <option value="new">Novo</option>
+              <option value="like_new">Seminovo</option>
+              <option value="good">Bom estado</option>
+              <option value="fair">Razoável</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Fotos (até 5)</label>
+          <label class="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center cursor-pointer hover:border-orange-400 transition-colors">
+            <svg class="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span class="text-sm text-gray-500">Clique para selecionar imagens</span>
+            <span class="text-xs text-gray-400 mt-1">JPG, PNG, WebP • Máx 5 fotos</span>
+            <input id="images" type="file" accept="image/*" multiple class="hidden">
+          </label>
+          <div id="image-preview" class="flex gap-2 mt-3 flex-wrap"></div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Quantidade em estoque *</label>
+          <input id="stock_quantity" type="number" required min="1" placeholder="10"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+              Preço mínimo (R$) *
+              <span class="text-xs font-normal text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full ml-1">secreto</span>
+            </label>
+            <input id="min_price" type="number" required min="0.01" step="0.01" placeholder="2000.00"
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+            <p class="text-xs text-gray-400 mt-1">Valor mínimo que aceita — nunca será exibido ao cliente.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+              Preço sugerido (R$) *
+              <span class="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-1">público</span>
+            </label>
+            <input id="market_price" type="number" required min="0.01" step="0.01" placeholder="2500.00"
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+            <p class="text-xs text-gray-400 mt-1">Preço de mercado exibido ao cliente como referência.</p>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-700">
+          <strong>Lembrete:</strong> O preço mínimo é secreto — os clientes farão ofertas com base apenas no preço sugerido. Ofertas serão aceitas automaticamente enquanto a média se mantiver acima do seu mínimo.
+        </div>
+
+        <button id="submit-btn" type="submit"
+          class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3.5 rounded-xl font-bold text-sm transition-colors shadow-sm">
+          Publicar Produto
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/config.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/merchant.js"></script>
+  <script>initNewProduct();</script>
+</body>
+</html>
