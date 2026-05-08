@@ -183,7 +183,12 @@ async function merchantLogin(e) {
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    showToast('Email ou senha incorretos.', 'error');
+    const msg = error.message.includes('Email not confirmed')
+      ? 'Email não confirmado. Desative a confirmação de email no Supabase ou confirme o usuário.'
+      : error.message.includes('Invalid login')
+      ? 'Email ou senha incorretos.'
+      : error.message;
+    showToast(msg, 'error');
     btn.disabled = false;
     btn.textContent = 'Entrar';
   } else {
