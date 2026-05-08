@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS merchants (
 
 ALTER TABLE merchants ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "merchants_select_own" ON merchants;
+DROP POLICY IF EXISTS "merchants_insert_own" ON merchants;
+DROP POLICY IF EXISTS "merchants_update_own" ON merchants;
+
 CREATE POLICY "merchants_select_own" ON merchants
   FOR SELECT TO authenticated USING (id = auth.uid());
 
@@ -51,11 +55,12 @@ CREATE TABLE IF NOT EXISTS products (
 
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
--- Merchants manage their own products
+DROP POLICY IF EXISTS "products_merchant_all" ON products;
+DROP POLICY IF EXISTS "products_public_read" ON products;
+
 CREATE POLICY "products_merchant_all" ON products
   FOR ALL TO authenticated USING (merchant_id = auth.uid()) WITH CHECK (merchant_id = auth.uid());
 
--- Anyone can view active products (but min_price is not exposed via RLS - handle in client)
 CREATE POLICY "products_public_read" ON products
   FOR SELECT TO anon, authenticated USING (status IN ('active', 'sold_out'));
 
@@ -75,14 +80,15 @@ CREATE TABLE IF NOT EXISTS offers (
 
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
 
--- Merchants see offers for their products
+DROP POLICY IF EXISTS "offers_merchant_read" ON offers;
+DROP POLICY IF EXISTS "offers_public_insert" ON offers;
+
 CREATE POLICY "offers_merchant_read" ON offers
   FOR SELECT TO authenticated
   USING (
     product_id IN (SELECT id FROM products WHERE merchant_id = auth.uid())
   );
 
--- Anyone can submit an offer
 CREATE POLICY "offers_public_insert" ON offers
   FOR INSERT TO anon, authenticated WITH CHECK (true);
 
@@ -92,6 +98,10 @@ CREATE POLICY "offers_public_insert" ON offers
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('product-images', 'product-images', true)
 ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "product_images_public_read" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_merchant_upload" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_merchant_delete" ON storage.objects;
 
 CREATE POLICY "product_images_public_read" ON storage.objects
   FOR SELECT TO anon, authenticated USING (bucket_id = 'product-images');
