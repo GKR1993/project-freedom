@@ -134,10 +134,12 @@ async function saveProduct(session) {
   btn.textContent = 'Salvando...';
 
   try {
-    // Upload images
+    // Upload images (or use imported URL)
     const imageUrls = [];
+    const importedUrl = document.getElementById('image-preview')?.dataset?.importedUrl;
+    if (importedUrl) imageUrls.push(importedUrl);
     const files = document.getElementById('images').files;
-    for (const file of Array.from(files).slice(0, 5)) {
+    for (const file of Array.from(files).slice(0, 5 - imageUrls.length)) {
       const ext = file.name.split('.').pop();
       const path = `${session.user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
       const { data, error } = await supabase.storage

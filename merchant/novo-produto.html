@@ -21,6 +21,21 @@
   </header>
 
   <div class="max-w-2xl mx-auto px-4 py-10">
+
+    <!-- URL Import -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-5">
+      <p class="text-sm font-semibold text-gray-700 mb-3">Importar dados de uma URL</p>
+      <div class="flex gap-2">
+        <input id="import-url" type="url" placeholder="https://www.loja.com.br/produto/..."
+          class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+        <button type="button" onclick="importFromUrl()"
+          class="bg-gray-900 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap">
+          Importar
+        </button>
+      </div>
+      <p id="import-status" class="text-xs text-gray-400 mt-2 hidden"></p>
+    </div>
+
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
       <form id="product-form" class="space-y-6">
 
@@ -110,6 +125,47 @@
   <script src="/assets/js/supabase-init.js"></script>
   <script src="/assets/js/auth.js"></script>
   <script src="/assets/js/merchant.js"></script>
-  <script>initNewProduct();</script>
+  <script>
+    initNewProduct();
+
+    async function importFromUrl() {
+      const urlInput = document.getElementById('import-url');
+      const status = document.getElementById('import-status');
+      const raw = urlInput.value.trim();
+      if (!raw) return;
+
+      status.textContent = 'Buscando dados...';
+      status.className = 'text-xs text-blue-500 mt-2';
+      status.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/fetch-product?url=' + encodeURIComponent(raw));
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        if (data.name) document.getElementById('name').value = data.name;
+        if (data.description) document.getElementById('description').value = data.description;
+        if (data.price) document.getElementById('market_price').value = parseFloat(data.price.replace(',', '.')) || '';
+
+        if (data.image) {
+          const preview = document.getElementById('image-preview');
+          const img = document.createElement('img');
+          img.src = data.image;
+          img.className = 'w-24 h-24 object-cover rounded-lg border';
+          preview.innerHTML = '';
+          preview.appendChild(img);
+          // store imported image URL for submission
+          preview.dataset.importedUrl = data.image;
+        }
+
+        status.textContent = 'Dados importados! Revise e ajuste antes de publicar.';
+        status.className = 'text-xs text-green-600 mt-2';
+      } catch (e) {
+        status.textContent = 'Erro ao importar: ' + e.message;
+        status.className = 'text-xs text-red-500 mt-2';
+      }
+    }
+  </script>
 </body>
 </html>

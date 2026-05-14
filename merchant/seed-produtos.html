@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Seed Produtos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center font-sans">
+  <div class="bg-white rounded-2xl shadow p-10 max-w-md w-full text-center">
+    <div id="status" class="text-gray-500 text-sm">Verificando sessão...</div>
+    <div id="log" class="mt-4 text-left text-xs font-mono text-gray-400 space-y-1"></div>
+  </div>
+
+  <script src="/assets/js/supabase.js"></script>
+  <script src="/assets/js/supabase-init.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script>
+    const produtos = [
+      {
+        name: 'Smart TV Samsung 55" 4K QLED',
+        description: 'Televisão 55 polegadas com tecnologia QLED, HDR10+, 4 entradas HDMI e Wi-Fi integrado.',
+        category: 'Eletrônicos', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600'],
+        stock_quantity: 8, min_price: 1800, market_price: 2499,
+      },
+      {
+        name: 'iPhone 14 Pro 256GB Preto',
+        description: 'iPhone 14 Pro com chip A16 Bionic, câmera de 48MP, Dynamic Island. Lacrado.',
+        category: 'Eletrônicos', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=600'],
+        stock_quantity: 5, min_price: 4200, market_price: 5999,
+      },
+      {
+        name: 'Notebook Dell Inspiron 15 i5 16GB',
+        description: 'Processador Intel Core i5 12ª geração, 16GB RAM, SSD 512GB, tela Full HD 15.6". Windows 11.',
+        category: 'Eletrônicos', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600'],
+        stock_quantity: 6, min_price: 2800, market_price: 3799,
+      },
+      {
+        name: 'PlayStation 5 + 2 Controles',
+        description: 'Console PS5 versão com disco, acompanha 2 controles DualSense originais.',
+        category: 'Eletrônicos', condition: 'like_new',
+        images: ['https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=600'],
+        stock_quantity: 3, min_price: 2900, market_price: 3999,
+      },
+      {
+        name: 'Geladeira Brastemp Frost Free 375L',
+        description: 'Refrigerador duplex Frost Free 375L, tecnologia FastAdapt, painel eletrônico. Inox.',
+        category: 'Eletrodomésticos', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=600'],
+        stock_quantity: 4, min_price: 2200, market_price: 3199,
+      },
+      {
+        name: 'MacBook Air M2 256GB Prata',
+        description: 'Chip Apple M2, 8GB RAM unificada, SSD 256GB, tela Liquid Retina 13.6". Bateria até 18h.',
+        category: 'Eletrônicos', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1611186871525-2e97b10efd7d?w=600'],
+        stock_quantity: 4, min_price: 6500, market_price: 8999,
+      },
+      {
+        name: 'AirPods Pro 2ª Geração',
+        description: 'Cancelamento de ruído ativo, áudio espacial personalizado, estojo MagSafe. Lacrado.',
+        category: 'Eletrônicos', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600'],
+        stock_quantity: 10, min_price: 1100, market_price: 1599,
+      },
+      {
+        name: 'Sofá Retrátil 3 Lugares Veludo',
+        description: 'Sofá retrátil e reclinável em veludo cinza, estrutura madeira maciça, 2,10m de largura.',
+        category: 'Móveis', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600'],
+        stock_quantity: 5, min_price: 1400, market_price: 1999,
+      },
+      {
+        name: 'Bicicleta Elétrica Urbana 350W',
+        description: 'Motor 350W, bateria 48V/10Ah (até 50km de autonomia), freios a disco, câmbio Shimano 7v.',
+        category: 'Esportes', condition: 'new',
+        images: ['https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=600'],
+        stock_quantity: 7, min_price: 3200, market_price: 4499,
+      },
+      {
+        name: 'Xbox Series S 512GB',
+        description: 'Console Xbox Series S, SSD 512GB, resolução 1440p, 120fps, acesso ao Game Pass.',
+        category: 'Eletrônicos', condition: 'like_new',
+        images: ['https://images.unsplash.com/photo-1621259182978-fbf93132d53d?w=600'],
+        stock_quantity: 6, min_price: 1600, market_price: 2199,
+      },
+    ];
+
+    function log(msg) {
+      const el = document.createElement('div');
+      el.textContent = msg;
+      document.getElementById('log').appendChild(el);
+    }
+
+    function setStatus(msg, color = 'text-gray-700') {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = `text-sm font-semibold ${color}`;
+    }
+
+    async function run() {
+      const session = await getSession();
+      if (!session) {
+        setStatus('Você precisa estar logado.', 'text-red-600');
+        setTimeout(() => window.location.href = '/merchant/login.html', 2000);
+        return;
+      }
+
+      setStatus('Inserindo produtos...', 'text-blue-600');
+
+      const rows = produtos.map(p => ({
+        ...p,
+        merchant_id: session.user.id,
+        stock_remaining: p.stock_quantity,
+        accepted_offers_count: 0,
+        accepted_offers_sum: 0,
+      }));
+
+      const { error } = await supabase.from('products').insert(rows);
+
+      if (error) {
+        setStatus('Erro: ' + error.message, 'text-red-600');
+        log('Detalhes: ' + JSON.stringify(error));
+        return;
+      }
+
+      setStatus('10 produtos inseridos com sucesso!', 'text-green-600');
+      log('Redirecionando para o dashboard...');
+      setTimeout(() => window.location.href = '/merchant/dashboard.html', 1500);
+    }
+
+    run();
+  </script>
+</body>
+</html>

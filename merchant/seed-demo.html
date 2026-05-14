@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Seed Demo</title>
+  <style>
+    body { font-family: sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .box { background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 40px; max-width: 480px; width: 100%; text-align: center; }
+    #status { font-size: 15px; font-weight: 600; color: #374151; }
+    #log { margin-top: 16px; font-size: 12px; font-family: monospace; color: #6b7280; text-align: left; line-height: 1.8; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <div id="status">Verificando sessão...</div>
+  <div id="log"></div>
+</div>
+
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/supabase-init.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+const PRODUTOS = [
+  { name: 'Smart TV Samsung 55" 4K QLED', description: 'Televisão 55 polegadas com tecnologia QLED, HDR10+ e 4 entradas HDMI.', category: 'Eletrônicos', condition: 'new', images: ['https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600'], stock_quantity: 8, min_price: 1800, market_price: 2499 },
+  { name: 'iPhone 14 Pro 256GB Preto', description: 'Chip A16 Bionic, câmera 48MP, Dynamic Island. Lacrado na caixa.', category: 'Eletrônicos', condition: 'new', images: ['https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=600'], stock_quantity: 5, min_price: 4200, market_price: 5999 },
+  { name: 'Notebook Dell Inspiron i5 16GB', description: 'Intel Core i5 12ª geração, 16GB RAM, SSD 512GB, tela Full HD 15.6".', category: 'Eletrônicos', condition: 'new', images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600'], stock_quantity: 6, min_price: 2800, market_price: 3799 },
+  { name: 'PlayStation 5 + 2 Controles', description: 'Console PS5 com disco, 2 controles DualSense originais inclusos.', category: 'Eletrônicos', condition: 'like_new', images: ['https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=600'], stock_quantity: 3, min_price: 2900, market_price: 3999 },
+  { name: 'Geladeira Brastemp Frost Free 375L', description: 'Refrigerador duplex Frost Free 375L, painel eletrônico. Acabamento Inox.', category: 'Eletrodomésticos', condition: 'new', images: ['https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=600'], stock_quantity: 4, min_price: 2200, market_price: 3199 },
+  { name: 'MacBook Air M2 256GB Prata', description: 'Apple M2, 8GB RAM, SSD 256GB, tela Liquid Retina 13.6". Bateria até 18h.', category: 'Eletrônicos', condition: 'new', images: ['https://images.unsplash.com/photo-1611186871525-2e97b10efd7d?w=600'], stock_quantity: 4, min_price: 6500, market_price: 8999 },
+  { name: 'AirPods Pro 2ª Geração', description: 'Cancelamento de ruído ativo, áudio espacial, estojo MagSafe. Lacrado.', category: 'Eletrônicos', condition: 'new', images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600'], stock_quantity: 10, min_price: 1100, market_price: 1599 },
+  { name: 'Sofá Retrátil 3 Lugares Veludo', description: 'Sofá retrátil e reclinável em veludo cinza, estrutura madeira maciça, 2,10m.', category: 'Móveis', condition: 'new', images: ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600'], stock_quantity: 5, min_price: 1400, market_price: 1999 },
+  { name: 'Bicicleta Elétrica Urbana 350W', description: 'Motor 350W, bateria 48V/10Ah, autonomia até 50km, câmbio Shimano 7v.', category: 'Esportes', condition: 'new', images: ['https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=600'], stock_quantity: 7, min_price: 3200, market_price: 4499 },
+  { name: 'Xbox Series S 512GB', description: 'SSD 512GB, resolução 1440p, 120fps. Acesso ao Xbox Game Pass Ultimate.', category: 'Eletrônicos', condition: 'like_new', images: ['https://images.unsplash.com/photo-1621259182978-fbf93132d53d?w=600'], stock_quantity: 6, min_price: 1600, market_price: 2199 },
+];
+
+function log(msg) {
+  document.getElementById('log').innerHTML += msg + '<br>';
+}
+
+async function run() {
+  const session = await getSession();
+  if (!session) {
+    document.getElementById('status').textContent = 'Você precisa estar logado.';
+    document.getElementById('status').style.color = '#dc2626';
+    setTimeout(() => window.location.href = '/merchant/login.html', 2000);
+    return;
+  }
+
+  document.getElementById('status').textContent = 'Inserindo 10 produtos demo...';
+  document.getElementById('status').style.color = '#2563eb';
+
+  const rows = PRODUTOS.map(p => ({
+    ...p,
+    merchant_id: session.user.id,
+    stock_remaining: p.stock_quantity,
+    accepted_offers_count: 0,
+    accepted_offers_sum: 0,
+  }));
+
+  const { error } = await supabase.from('products').insert(rows);
+
+  if (error) {
+    document.getElementById('status').textContent = 'Erro ao inserir produtos.';
+    document.getElementById('status').style.color = '#dc2626';
+    log('Erro: ' + error.message);
+    return;
+  }
+
+  document.getElementById('status').textContent = '✓ 10 produtos inseridos!';
+  document.getElementById('status').style.color = '#16a34a';
+  log('Redirecionando para o dashboard...');
+  setTimeout(() => window.location.href = '/merchant/dashboard.html', 1500);
+}
+
+run();
+</script>
+</body>
+</html>
