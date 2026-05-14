@@ -7,22 +7,32 @@ async function loadDashboard() {
 
   document.getElementById('merchant-email').textContent = session.user.email;
 
-  const { data: merchant } = await supabase
+  const { data: merchant, error: merchantError } = await supabase
     .from('merchants')
     .select('*')
     .eq('id', session.user.id)
-    .single();
+    .maybeSingle();
 
+  if (merchantError) {
+    console.error('Merchants query error:', merchantError);
+  }
   if (merchant) {
     document.getElementById('store-name').textContent = merchant.store_name;
   }
 
-  const { data: products } = await supabase
+  const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*')
     .eq('merchant_id', session.user.id)
     .neq('status', 'deleted')
     .order('created_at', { ascending: false });
+
+  if (productsError) {
+    console.error('Products query error:', productsError);
+    const tbody = document.getElementById('products-tbody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-400">Erro ao carregar produtos: ${productsError.message}</td></tr>`;
+    return;
+  }
 
   if (!products) return;
 

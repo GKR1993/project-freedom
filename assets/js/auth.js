@@ -7,16 +7,27 @@ async function getSession() {
 
 async function requireMerchantAuth() {
   const session = await getSession();
-  if (session) return session;
+  if (session) {
+    // Explicitly set session so the client attaches JWT to every subsequent request
+    await supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    });
+    return session;
+  }
 
   // Session not in localStorage yet — wait briefly for auth state to resolve
   return new Promise((resolve) => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       subscription.unsubscribe();
       if (!s) {
         window.location.href = '/merchant/login.html';
         resolve(null);
       } else {
+        await supabase.auth.setSession({
+          access_token: s.access_token,
+          refresh_token: s.refresh_token,
+        });
         resolve(s);
       }
     });
