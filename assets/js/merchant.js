@@ -1,36 +1,43 @@
 // Merchant portal logic
 
 // ── Dashboard ────────────────────────────────────────────────
+async function restGet(path, token) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json',
+    },
+  });
+  if (!res.ok) throw new Error((await res.text()) || res.statusText);
+  return res.json();
+}
+
 async function loadDashboard() {
   const session = await requireMerchantAuth();
   if (!session) return;
 
+  const token = session.access_token;
   document.getElementById('merchant-email').textContent = session.user.email;
 
-  const { data: merchant, error: merchantError } = await supabase
-    .from('merchants')
-    .select('*')
-    .eq('id', session.user.id)
-    .maybeSingle();
-
-  if (merchantError) {
-    console.error('Merchants query error:', merchantError);
-  }
-  if (merchant) {
-    document.getElementById('store-name').textContent = merchant.store_name;
+  try {
+    const merchants = await restGet(`merchants?id=eq.${session.user.id}&limit=1`, token);
+    if (merchants[0]) {
+      document.getElementById('store-name').textContent = merchants[0].store_name;
+    }
+  } catch (e) {
+    console.error('Merchants fetch error:', e);
   }
 
-  const { data: products, error: productsError } = await supabase
-    .from('products')
-    .select('*')
-    .eq('merchant_id', session.user.id)
-    .neq('status', 'deleted')
-    .order('created_at', { ascending: false });
-
-  if (productsError) {
-    console.error('Products query error:', productsError);
+  let products;
+  try {
+    products = await restGet(
+      `products?merchant_id=eq.${session.user.id}&status=neq.deleted&order=created_at.desc`,
+      token
+    );
+  } catch (e) {
     const tbody = document.getElementById('products-tbody');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-400">Erro ao carregar produtos: ${productsError.message}</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-400">Erro ao carregar produtos: ${e.message}</td></tr>`;
     return;
   }
 
@@ -92,13 +99,35 @@ async function loadDashboard() {
 
 async function toggleProduct(id, currentStatus) {
   const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-  await supabase.from('products').update({ status: newStatus }).eq('id', id);
+  const session = await requireMerchantAuth();
+  if (!session) return;
+  await fetch(SUPABASE_URL + `/rest/v1/products?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + session.access_token,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify({ status: newStatus }),
+  });
   loadDashboard();
 }
 
 async function deleteProduct(id) {
   if (!confirm('Excluir este produto? Esta ação não pode ser desfeita.')) return;
-  await supabase.from('products').update({ status: 'deleted' }).eq('id', id);
+  const session = await requireMerchantAuth();
+  if (!session) return;
+  await fetch(SUPABASE_URL + `/rest/v1/products?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + session.access_token,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify({ status: 'deleted' }),
+  });
   loadDashboard();
 }
 
@@ -162,20 +191,28 @@ async function saveProduct(session) {
     }
 
     const qty = parseInt(document.getElementById('stock_quantity').value);
-    const { error } = await supabase.from('products').insert({
-      merchant_id: session.user.id,
-      name: document.getElementById('name').value.trim(),
-      description: document.getElementById('description').value.trim(),
-      category: document.getElementById('category').value,
-      condition: document.getElementById('condition').value,
-      images: imageUrls,
-      stock_quantity: qty,
-      stock_remaining: qty,
-      min_price: parseFloat(document.getElementById('min_price').value),
-      market_price: parseFloat(document.getElementById('market_price').value),
+    const insertRes = await fetch(SUPABASE_URL + '/rest/v1/products', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        merchant_id: session.user.id,
+        name: document.getElementById('name').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        category: document.getElementById('category').value,
+        condition: document.getElementById('condition').value,
+        images: imageUrls,
+        stock_quantity: qty,
+        stock_remaining: qty,
+        min_price: parseFloat(document.getElementById('min_price').value),
+        market_price: parseFloat(document.getElementById('market_price').value),
+      }),
     });
-
-    if (error) throw error;
+    if (!insertRes.ok) throw new Error((await insertRes.text()) || insertRes.statusText);
     window.location.href = '/merchant/dashboard.html?added=1';
   } catch (err) {
     showToast('Erro ao salvar produto: ' + err.message, 'error');
