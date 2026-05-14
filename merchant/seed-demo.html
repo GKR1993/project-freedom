@@ -46,6 +46,12 @@ async function run() {
     return;
   }
 
+  // Força o cliente a usar a sessão ativa nas chamadas API
+  await supabase.auth.setSession({
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+  });
+
   // Garante que o merchant existe antes de inserir produtos
   document.getElementById('status').textContent = 'Criando perfil do lojista...';
   document.getElementById('status').style.color = '#2563eb';
