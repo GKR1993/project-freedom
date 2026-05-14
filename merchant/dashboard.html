@@ -123,31 +123,6 @@
     if (new URLSearchParams(location.search).get('added') === '1') {
       setTimeout(() => showToast('Produto publicado com sucesso!'), 300);
     }
-
-    // DEBUG: run independently of loadDashboard to diagnose blank dashboard
-    (async () => {
-      const debugEl = document.createElement('div');
-      debugEl.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1e293b;color:#94a3b8;font-family:monospace;font-size:11px;padding:8px 12px;z-index:9999;line-height:1.8';
-      document.body.appendChild(debugEl);
-
-      function dbg(msg) { debugEl.innerHTML += msg + '<br>'; }
-
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        dbg('session: ' + (session ? session.user.id : 'NULL'));
-
-        if (!session) { dbg('❌ sem sessão — redirecionando...'); return; }
-
-        const token = session.access_token;
-        const res = await fetch(SUPABASE_URL + '/rest/v1/products?merchant_id=eq.' + session.user.id + '&limit=5', {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
-        });
-        const data = await res.json();
-        dbg('products status: ' + res.status + ' | count: ' + (Array.isArray(data) ? data.length : 'N/A'));
-        if (!res.ok || !Array.isArray(data)) dbg('erro: ' + JSON.stringify(data).substring(0, 200));
-        else if (data.length > 0) dbg('1º produto: ' + data[0].name);
-      } catch(e) { dbg('EXCEPTION: ' + e.message); }
-    })();
   </script>
 </body>
 </html>
