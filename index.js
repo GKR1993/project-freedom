@@ -54,19 +54,26 @@ async function handleFetchProduct(url) {
 function parseProduct(html, pageUrl) {
   const result = { name: '', description: '', image: '', price: '' };
 
-  // 1. Try JSON-LD
+  // Helper: extract meta content by property or name
+  function meta(attr, val) {
+    const r = new RegExp(`<meta[^>]+${attr}=["']${val}["'][^>]+content=["']([^"']+)["']|<meta[^>]+content=["']([^"']+)["'][^>]+${attr}=["']${val}["']`, 'i');
+    const m = html.match(r);
+    return m ? (m[1] || m[2] || '').trim() : '';
+  }
+
+  // 1. JSON-LD Product schema
   const ldScripts = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   for (const match of ldScripts) {
     try {
       let data = JSON.parse(match[1]);
       if (!Array.isArray(data)) data = [data];
-      const product = data.find(d => d['@type'] === 'Product') ||
-        data.flatMap(d => d['@graph'] || []).find(d => d['@type'] === 'Product');
+      const flat = data.flatMap(d => [d, ...(d['@graph'] || [])]);
+      const product = flat.find(d => d['@type'] === 'Product');
       if (product) {
         result.name = String(product.name || '').trim();
         result.description = String(product.description || '').replace(/<[^>]+>/g, '').trim();
         const img = product.image;
-        result.image = Array.isArray(img) ? img[0] : (typeof img === 'object' ? img?.url : img) || '';
+        result.image = Array.isArray(img) ? img[0] : (img?.url || img || '');
         const offers = product.offers;
         if (offers) {
           const offer = Array.isArray(offers) ? offers[0] : offers;
@@ -74,35 +81,64 @@ function parseProduct(html, pageUrl) {
         }
         break;
       }
-    } catch (_) { /* continue */ }
+    } catch (_) {}
   }
 
-  // 2. Fallback: Open Graph
-  function ogAttr(prop) {
-    const m = html.match(new RegExp(`<meta[^>]+property=["']og:${prop}["'][^>]+content=["']([^"']+)["']`, 'i')) ||
-              html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:${prop}["']`, 'i'));
-    return m ? m[1].trim() : '';
+  // 2. Next.js / Nuxt __NEXT_DATA__ / __NUXT__ inline JSON
+  if (!result.name) {
+    const nextMatch = html.match(/<script[^>]*id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
+    if (nextMatch) {
+      try {
+        const next = JSON.parse(nextMatch[1]);
+        const page = next?.props?.pageProps;
+        const p = page?.product || page?.item || page?.data?.product || page?.initialData?.product;
+        if (p) {
+          result.name = p.name || p.title || p.productName || '';
+          result.description = (p.description || p.longDescription || '').replace(/<[^>]+>/g, '');
+          result.image = p.image || p.imageUrl || p.images?.[0]?.url || p.images?.[0] || '';
+          result.price = String(p.price?.value || p.price || p.salePrice || p.currentPrice || '').replace(/[^\d.,]/g, '');
+        }
+      } catch (_) {}
+    }
   }
 
-  if (!result.name) result.name = ogAttr('title');
-  if (!result.description) result.description = ogAttr('description');
-  if (!result.image) result.image = ogAttr('image');
+  // 3. Open Graph tags
+  if (!result.name) result.name = meta('property', 'og:title');
+  if (!result.description) result.description = meta('property', 'og:description');
+  if (!result.image) result.image = meta('property', 'og:image');
+  if (!result.price) result.price = meta('property', 'product:price:amount') || meta('property', 'og:price:amount');
 
-  // 3. Fallback: <title> tag
+  // 4. Twitter card tags
+  if (!result.name) result.name = meta('name', 'twitter:title');
+  if (!result.description) result.description = meta('name', 'twitter:description');
+  if (!result.image) result.image = meta('name', 'twitter:image');
+
+  // 5. Standard meta tags
   if (!result.name) {
     const t = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     if (t) result.name = t[1].replace(/\s+/g, ' ').trim();
   }
+  if (!result.description) result.description = meta('name', 'description');
 
-  // 4. Fallback: meta description
-  if (!result.description) {
-    const m = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i) ||
-              html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
-    if (m) result.description = m[1].trim();
+  // 6. Mercado Livre / common SPA: look for price patterns in raw HTML
+  if (!result.price) {
+    const priceMatch = html.match(/"price"\s*:\s*([\d]+(?:[.,]\d+)?)/i) ||
+                       html.match(/"valor"\s*:\s*([\d]+(?:[.,]\d+)?)/i) ||
+                       html.match(/"salePrice"\s*:\s*([\d]+(?:[.,]\d+)?)/i);
+    if (priceMatch) result.price = priceMatch[1];
+  }
+
+  // 7. Look for product name in common JSON keys in page source
+  if (!result.name) {
+    const nameMatch = html.match(/"productName"\s*:\s*"([^"]{3,200})"/i) ||
+                      html.match(/"itemName"\s*:\s*"([^"]{3,200})"/i) ||
+                      html.match(/"product_name"\s*:\s*"([^"]{3,200})"/i);
+    if (nameMatch) result.name = nameMatch[1];
   }
 
   result.name = result.name.substring(0, 200);
   result.description = result.description.replace(/<[^>]+>/g, '').substring(0, 1000);
+  result.image = result.image.startsWith('//') ? 'https:' + result.image : result.image;
 
   return result;
 }
