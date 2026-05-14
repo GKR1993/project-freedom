@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\gugar\\\\oferte-compre\\\\assets\\\\js\\\\config.js\" \"c:\\\\Users\\\\gugar\\\\oferte-compre\\\\assets\\\\js\\\\supabase-init.js\")",
+      "Read(//c/Users/gugar/oferte-compre/**)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

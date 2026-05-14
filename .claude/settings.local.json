@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\Users\\\\gugar\\\\oferte-compre\" log --oneline -10)",
+      "Bash(git -C \"c:\\\\Users\\\\gugar\\\\oferte-compre\" diff HEAD -- assets/js/auth.js assets/js/merchant.js)"
+    ]
+  }
+}

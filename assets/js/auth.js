@@ -7,11 +7,27 @@ async function getSession() {
 
 async function requireMerchantAuth() {
   const session = await getSession();
-  if (!session) {
-    window.location.href = '/merchant/login.html';
-    return null;
-  }
-  return session;
+  if (session) return session;
+
+  // Session not in localStorage yet — wait briefly for auth state to resolve
+  return new Promise((resolve) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      subscription.unsubscribe();
+      if (!s) {
+        window.location.href = '/merchant/login.html';
+        resolve(null);
+      } else {
+        resolve(s);
+      }
+    });
+
+    // Fallback: if auth state never fires within 2s, redirect to login
+    setTimeout(() => {
+      subscription.unsubscribe();
+      window.location.href = '/merchant/login.html';
+      resolve(null);
+    }, 2000);
+  });
 }
 
 async function logout() {
@@ -31,11 +47,10 @@ function showToast(msg, type = 'success') {
   const toast = document.getElementById('toast');
   if (!toast) return;
   toast.textContent = msg;
-  toast.className = `fixed bottom-6 right-6 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-lg z-50 transition-all ${
-    type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-yellow-600'
-  }`;
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 4000);
+  const color = type === 'error' ? '#dc2626' : type === 'warning' ? '#d97706' : '#16a34a';
+  toast.style.cssText = `position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;color:#fff;font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:9999;background:${color};display:block`;
+  toast.className = '';
+  setTimeout(() => { toast.style.display = 'none'; }, 4000);
 }
 
 const CONDITIONS = {

@@ -181,18 +181,29 @@ async function merchantLogin(e) {
   btn.disabled = true;
   btn.textContent = 'Entrando...';
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    const msg = error.message.includes('Email not confirmed')
-      ? 'Email não confirmado. Desative a confirmação de email no Supabase ou confirme o usuário.'
-      : error.message.includes('Invalid login')
-      ? 'Email ou senha incorretos.'
-      : error.message;
-    showToast(msg, 'error');
+  try {
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Tempo esgotado — verifique se o projeto Supabase está ativo em supabase.com')), 10000)
+    );
+    const loginCall = supabase.auth.signInWithPassword({ email, password });
+    const { error } = await Promise.race([loginCall, timeout]);
+
+    if (error) {
+      const msg = error.message.includes('Email not confirmed')
+        ? 'Email não confirmado. Confirme o usuário no painel do Supabase (Authentication → Users).'
+        : error.message.includes('Invalid login') || error.message.includes('invalid_grant')
+        ? 'Email ou senha incorretos.'
+        : error.message;
+      showToast(msg, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    } else {
+      window.location.href = '/merchant/dashboard.html';
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
     btn.disabled = false;
     btn.textContent = 'Entrar';
-  } else {
-    window.location.href = '/merchant/dashboard.html';
   }
 }
 
