@@ -46,8 +46,25 @@ async function run() {
     return;
   }
 
-  document.getElementById('status').textContent = 'Inserindo 10 produtos demo...';
+  // Garante que o merchant existe antes de inserir produtos
+  document.getElementById('status').textContent = 'Criando perfil do lojista...';
   document.getElementById('status').style.color = '#2563eb';
+
+  const { error: merchantError } = await supabase.from('merchants').upsert({
+    id: session.user.id,
+    email: session.user.email,
+    store_name: 'Eletrônicos Premium',
+    owner_name: 'Demo Lojista',
+    phone: '11999990000',
+  }, { onConflict: 'id', ignoreDuplicates: true });
+
+  if (merchantError) {
+    document.getElementById('status').textContent = 'Erro ao criar merchant: ' + merchantError.message;
+    document.getElementById('status').style.color = '#dc2626';
+    return;
+  }
+
+  document.getElementById('status').textContent = 'Inserindo 10 produtos demo...';
 
   const rows = PRODUTOS.map(p => ({
     ...p,
