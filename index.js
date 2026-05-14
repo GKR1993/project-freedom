@@ -33,21 +33,63 @@ async function handleFetchProduct(url) {
     return new Response(JSON.stringify({ error: 'url param required' }), { status: 400, headers: corsHeaders });
   }
 
+  // Fallback: extract product name from URL slug
+  const slugFallback = extractSlugName(targetUrl);
+  const result = { name: slugFallback, description: '', image: '', price: '', partial: false };
+
   try {
     const res = await fetch(targetUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9',
+        'Referer': 'https://www.google.com.br/',
+      },
       redirect: 'follow',
     });
 
-    if (!res.ok) {
-      return new Response(JSON.stringify({ error: `HTTP ${res.status}` }), { status: 422, headers: corsHeaders });
+    const html = await res.text();
+
+    // Detect bot/anti-scraping block pages
+    const isBlocked = !res.ok ||
+      html.includes('Não é possível acessar a página') ||
+      html.includes('Access Denied') ||
+      html.includes('Robot Check') ||
+      html.includes('captcha') ||
+      html.length < 500;
+
+    if (isBlocked) {
+      result.partial = true;
+      result.blocked = true;
+      return new Response(JSON.stringify(result), { headers: corsHeaders });
     }
 
-    const html = await res.text();
-    const result = parseProduct(html, targetUrl);
-    return new Response(JSON.stringify(result), { headers: corsHeaders });
+    const parsed = parseProduct(html, targetUrl);
+    if (parsed.name) result.name = parsed.name;
+    if (parsed.description) result.description = parsed.description;
+    if (parsed.image) result.image = parsed.image;
+    if (parsed.price) result.price = parsed.price;
+
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    result.partial = true;
+    result.error = e.message;
+  }
+
+  return new Response(JSON.stringify(result), { headers: corsHeaders });
+}
+
+function extractSlugName(rawUrl) {
+  try {
+    const u = new URL(rawUrl);
+    const parts = u.pathname.split('/').filter(Boolean);
+    // Pick the longest segment that looks like a product slug (has hyphens)
+    const slug = parts.sort((a, b) => b.length - a.length).find(p => p.includes('-') && p.length > 10) || parts[0] || '';
+    return slug
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase())
+      .substring(0, 150);
+  } catch (_) {
+    return '';
   }
 }
 

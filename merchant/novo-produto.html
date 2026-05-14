@@ -142,7 +142,7 @@
         const res = await fetch('/api/fetch-product?url=' + encodeURIComponent(raw));
         const data = await res.json();
 
-        if (data.error) throw new Error(data.error);
+        if (data.error && !data.partial) throw new Error(data.error);
 
         if (data.name) document.getElementById('name').value = data.name;
         if (data.description) document.getElementById('description').value = data.description;
@@ -155,12 +155,16 @@
           img.className = 'w-24 h-24 object-cover rounded-lg border';
           preview.innerHTML = '';
           preview.appendChild(img);
-          // store imported image URL for submission
           preview.dataset.importedUrl = data.image;
         }
 
-        status.textContent = 'Dados importados! Revise e ajuste antes de publicar.';
-        status.className = 'text-xs text-green-600 mt-2';
+        if (data.blocked) {
+          status.textContent = '⚠ Este site bloqueia importação automática. O nome foi extraído da URL — complete os outros campos manualmente.';
+          status.className = 'text-xs text-yellow-600 mt-2';
+        } else {
+          status.textContent = 'Dados importados! Revise e ajuste antes de publicar.';
+          status.className = 'text-xs text-green-600 mt-2';
+        }
       } catch (e) {
         status.textContent = 'Erro ao importar: ' + e.message;
         status.className = 'text-xs text-red-500 mt-2';
