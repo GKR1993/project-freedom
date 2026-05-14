@@ -37,6 +37,23 @@ function log(msg) {
   document.getElementById('log').innerHTML += msg + '<br>';
 }
 
+async function restCall(path, method, body, token) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Prefer': 'return=minimal,resolution=ignore-duplicates',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text);
+  }
+}
+
 async function run() {
   const session = await getSession();
   if (!session) {
@@ -46,53 +63,41 @@ async function run() {
     return;
   }
 
-  // Força o cliente a usar a sessão ativa nas chamadas API
-  await supabase.auth.setSession({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-  });
+  const token = session.access_token;
+  const uid   = session.user.id;
 
-  // Garante que o merchant existe antes de inserir produtos
-  document.getElementById('status').textContent = 'Criando perfil do lojista...';
-  document.getElementById('status').style.color = '#2563eb';
+  try {
+    document.getElementById('status').textContent = 'Criando perfil do lojista...';
+    document.getElementById('status').style.color = '#2563eb';
 
-  const { error: merchantError } = await supabase.from('merchants').upsert({
-    id: session.user.id,
-    email: session.user.email,
-    store_name: 'Eletrônicos Premium',
-    owner_name: 'Demo Lojista',
-    phone: '11999990000',
-  }, { onConflict: 'id', ignoreDuplicates: true });
+    await restCall('merchants', 'POST', {
+      id: uid,
+      email: session.user.email,
+      store_name: 'Eletrônicos Premium',
+      owner_name: 'Demo Lojista',
+      phone: '11999990000',
+    }, token);
 
-  if (merchantError) {
-    document.getElementById('status').textContent = 'Erro ao criar merchant: ' + merchantError.message;
+    document.getElementById('status').textContent = 'Inserindo 10 produtos...';
+
+    const rows = PRODUTOS.map(p => ({
+      ...p,
+      merchant_id: uid,
+      stock_remaining: p.stock_quantity,
+      accepted_offers_count: 0,
+      accepted_offers_sum: 0,
+    }));
+
+    await restCall('products', 'POST', rows, token);
+
+    document.getElementById('status').textContent = '✓ 10 produtos inseridos!';
+    document.getElementById('status').style.color = '#16a34a';
+    log('Redirecionando para o dashboard...');
+    setTimeout(() => window.location.href = '/merchant/dashboard.html', 1500);
+  } catch (e) {
+    document.getElementById('status').textContent = 'Erro: ' + e.message;
     document.getElementById('status').style.color = '#dc2626';
-    return;
   }
-
-  document.getElementById('status').textContent = 'Inserindo 10 produtos demo...';
-
-  const rows = PRODUTOS.map(p => ({
-    ...p,
-    merchant_id: session.user.id,
-    stock_remaining: p.stock_quantity,
-    accepted_offers_count: 0,
-    accepted_offers_sum: 0,
-  }));
-
-  const { error } = await supabase.from('products').insert(rows);
-
-  if (error) {
-    document.getElementById('status').textContent = 'Erro ao inserir produtos.';
-    document.getElementById('status').style.color = '#dc2626';
-    log('Erro: ' + error.message);
-    return;
-  }
-
-  document.getElementById('status').textContent = '✓ 10 produtos inseridos!';
-  document.getElementById('status').style.color = '#16a34a';
-  log('Redirecionando para o dashboard...');
-  setTimeout(() => window.location.href = '/merchant/dashboard.html', 1500);
 }
 
 run();
